@@ -1,0 +1,209 @@
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from scipy.spatial.ckdtree import cKDTree as kdtree
+from utils.utils import spherical_projection
+
+
+splits = {
+    "train": [1, 2, 0, 3, 4, 5, 6, 7, 9, 10],
+    "val": [8],
+    "test": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+}
+
+
+
+
+class SemanticKitti(torch.utils.data.Dataset):
+    def __init__(self, dataset_dir: Path, split: str,) -> None:
+        self.split = split
+        self.seqs = splits[split]
+        self.dataset_dir = dataset_dir
+        self.sweeps = []
+
+        for seq in self.seqs:
+            seq_str = f"{seq:0>2}"
+            seq_path = dataset_dir / seq_str / "velodyne"
+            for sweep in seq_path.iterdir():
+                self.sweeps.append((seq_str, sweep.stem))
+
+    def __getitem__(self, index):
+        seq, sweep = self.sweeps[index]
+        sweep_file = self.dataset_dir / seq / "velodyne" / f"{sweep}.bin"
+        points = np.fromfile(sweep_file.as_posix(), dtype=np.float32)
+        points = points.reshape((-1, 4))
+        points_xyz = points[:, :3]
+        points_refl = points[:, 3]
+
+        if self.split != "test":
+            labels_file = self.dataset_dir / seq / "labels" / f"{sweep}.label"
+            labels = np.fromfile(labels_file.as_posix(), dtype=np.int32)
+
+            lab_data = labels.reshape((-1))
+            semantic_labels = lab_data  & 0xFFFF  # bitwise AND with 0xFFFF
+            remap_dict = learning_map
+            u_s_l = np.unique(semantic_labels)
+            label = np.zeros((semantic_labels.shape[0]), dtype=np.int32)
+            for i in range(len(u_s_l)):
+                label[semantic_labels == u_s_l[i]] = remap_dict[u_s_l[i]]
+            labels = (label - 1) % 19
+
+        else:
+            labels = np.zeros((points.shape[0]), dtype=np.int32)
+
+
+        (depth_image, refl_image, label_image, px, py , points_xyz, points_refl, labels) = spherical_projection(points_xyz, 
+                                                                    points_refl,
+                                                                    labels,
+                                                                    fov_up_deg=2.0 ,
+                                                                    fov_down_deg=-24.9,
+                                                                    H= 64 ,
+                                                                    W= 2048,
+                                                                    num_classes=19,
+                                                                    )
+
+
+        res = {
+            "depth_image": torch.from_numpy(depth_image).float(),
+            "reflectivity_image": torch.from_numpy(refl_image).float(),
+            "label_image": torch.from_numpy(label_image).long(),
+            "px": torch.from_numpy(px).long(),
+            "py": torch.from_numpy(py).long(),
+            "points_xyz": torch.from_numpy(points_xyz).float(),
+            "points_refl": torch.from_numpy(points_refl).float(),
+            "labels": torch.from_numpy(labels).long(),
+
+        }
+
+        if self.split in ["test", "val"]:
+            res["seq"] = seq
+            res["sweep"] = sweep
+
+        return res
+
+    def __len__(self):
+        return len(self.sweeps)
+
+
+
+
+learning_map = {
+    0: 255,  # "unlabeled"
+    1: 255,  # "outlier" mapped to "unlabeled" --------------------------mapped
+    10: 0,  # "car"
+    11: 1,  # "bicycle"
+    13: 4,  # "bus" mapped to "other-vehicle" --------------------------mapped
+    15: 2,  # "motorcycle"
+    16: 4,  # "on-rails" mapped to "other-vehicle" ---------------------mapped
+    18: 3,  # "truck"
+    20: 4,  # "other-vehicle"
+    30: 5,  # "person"
+    31: 6,  # "bicyclist"
+    32: 7,  # "motorcyclist"
+    40: 8,  # "road"
+    44: 9,  # "parking"
+    48: 10,  # "sidewalk"
+    49: 11,  # "other-ground"
+    50: 12,  # "building"
+    51: 13,  # "fence"
+    52: 255,  # "other-structure" mapped to "unlabeled" ------------------mapped
+    60: 8,  # "lane-marking" to "road" ---------------------------------mapped
+    70: 14,  # "vegetation"
+    71: 15,  # "trunk"
+    72: 16,  # "terrain"
+    80: 17,  # "pole"
+    81: 18,  # "traffic-sign"
+    99: 255,  # "other-object" to "unlabeled" ----------------------------mapped
+    252: 0,  # "moving-car" to "car" ------------------------------------mapped
+    253: 6,  # "moving-bicyclist" to "bicyclist" ------------------------mapped
+    254: 5,  # "moving-person" to "person" ------------------------------mapped
+    255: 7,  # "moving-motorcyclist" to "motorcyclist" ------------------mapped
+    256: 4,  # "moving-on-rails" mapped to "other-vehicle" --------------mapped
+    257: 4,  # "moving-bus" mapped to "other-vehicle" -------------------mapped
+    258: 3,  # "moving-truck" to "truck" --------------------------------mapped
+    259: 4,  # "moving-other"-vehicle to "other-vehicle" ----------------mappe
+}
+class_names = [
+    "car",
+    "bicycle",
+    "motorcycle",
+    "truck",
+    "other-vehicle",
+    "person",
+    "bicyclist",
+    "motorcyclist",
+    "road",
+    "parking",
+    "sidewalk",
+    "other-ground",
+    "building",
+    "fence",
+    "vegetation",
+    "trunk",
+    "terrain",
+    "pole",
+    "traffic-sign",
+]
+map_inv = {
+    0: 10,  # "car"
+    1: 11,  # "bicycle"
+    2: 15,  # "motorcycle"
+    3: 18,  # "truck"
+    4: 20,  # "other-vehicle"
+    5: 30,  # "person"
+    6: 31,  # "bicyclist"
+    7: 32,  # "motorcyclist"
+    8: 40,  # "road"
+    9: 44,  # "parking"
+    10: 48,  # "sidewalk"
+    11: 49,  # "other-ground"
+    12: 50,  # "building"
+    13: 51,  # "fence"
+    14: 70,  # "vegetation"
+    15: 71,  # "trunk"
+    16: 72,  # "terrain"
+    17: 80,  # "pole"
+    18: 81,  # "traffic-sign
+    255: 0,
+}
+
+color_map = {  # bgr
+    0: [0, 0, 0],
+    1: [0, 0, 255],
+    10: [245, 150, 100],
+    11: [245, 230, 100],
+    13: [250, 80, 100],
+    15: [150, 60, 30],
+    16: [255, 0, 0],
+    18: [180, 30, 80],
+    20: [255, 0, 0],
+    30: [30, 30, 255],
+    31: [200, 40, 255],
+    32: [90, 30, 150],
+    40: [255, 0, 255],
+    44: [255, 150, 255],
+    48: [75, 0, 75],
+    49: [75, 0, 175],
+    50: [0, 200, 255],
+    51: [50, 120, 255],
+    52: [0, 150, 255],
+    60: [170, 255, 150],
+    70: [0, 175, 0],
+    71: [0, 60, 135],
+    72: [80, 240, 150],
+    80: [150, 240, 255],
+    81: [0, 0, 255],
+    99: [255, 255, 50],
+    252: [245, 150, 100],
+    256: [255, 0, 0],
+    253: [200, 40, 255],
+    254: [30, 30, 255],
+    255: [90, 30, 150],
+    257: [250, 80, 100],
+    258: [180, 30, 80],
+    259: [255, 0, 0],
+}
+
+train_color_map = {i: color_map[j] for i, j in map_inv.items()}
