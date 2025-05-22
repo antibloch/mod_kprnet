@@ -37,7 +37,8 @@ class SemanticKitti(torch.utils.data.Dataset):
             label = np.zeros((semantic_labels.shape[0]), dtype=np.int32)
             for i in range(len(u_s_l)):
                 label[semantic_labels == u_s_l[i]] = remap_dict[u_s_l[i]]
-            labels = (label - 1) % 19
+            label[label == 255] = 19
+            labels = label
         else:
             labels = np.zeros((points.shape[0]), dtype=np.int32)
         (depth_image, refl_image, label_image, px, py , points_xyz, points_refl, labels) = spherical_projection(points_xyz,
@@ -46,8 +47,7 @@ class SemanticKitti(torch.utils.data.Dataset):
                                                                     fov_up_deg=2.0 ,
                                                                     fov_down_deg=-24.9,
                                                                     H= 64 ,
-                                                                    W= 2048,
-                                                                    num_classes=19,
+                                                                    W= 2048
                                                                     )
         # print(depth_image.shape, refl_image.shape, label_image.shape, px.shape, py.shape, points_xyz.shape, points_refl.shape, labels.shape)
         res = {
@@ -122,6 +122,7 @@ class_names = [
     "terrain",
     "pole",
     "traffic-sign",
+    "unlabeled"
 ]
 map_inv = {
     0: 10,  # "car"

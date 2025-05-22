@@ -10,8 +10,7 @@ def spherical_projection(points,
                          fov_up_deg: float,
                          fov_down_deg: float,
                          H: int,
-                         W: int,
-                         num_classes: int,
+                         W: int
                          ):
     orcale_indices = np.arange(len(points))
     # based on salsa's projection function
@@ -61,6 +60,7 @@ def spherical_projection(points,
     points_2_image_indices = {}
     for i in range(len(indices_ord )):
         points_2_image_indices[indices_ord [i]] = [py_ord[i], px_ord[i]]
+        
     #============================================
     # 1) flatten labels and indices
     labels_flat = labels_ord.squeeze()                # shape (N,)
@@ -73,4 +73,5 @@ def spherical_projection(points,
     cl_map_2d = np.zeros((H, W), dtype=np.int32) + 18
     cl_map_2d[ rows, cols ] = labels_flat
     labels_ord = np.expand_dims(back_project(cl_map_2d, rows, cols), axis = -1)
+
     return depth_map, refl_map, cl_map_2d, rows, cols, points_ord, refl_ord, labels_ord
