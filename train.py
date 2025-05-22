@@ -284,7 +284,7 @@ def eval_val(model, val_loader, num_classes, epoch):
 def train():
     # torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.enabled = True
-    num_classes = 19
+    num_classes = 20
 
     model =  UNet(in_channels_coarse=1,in_channels_fine=1, out_channels=num_classes)
     torch.cuda.set_device(0)
