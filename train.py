@@ -356,7 +356,7 @@ def train():
             run_loss += loss.item()
         run_loss /= step
         run_grad_norm /= step
-        if epoch % 10 == 0:
+        if epoch % 1 == 0:
             val_l = loss_val(model, val_loader, loss_fn)
 
             print(
