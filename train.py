@@ -271,7 +271,8 @@ def eval_val(model, val_loader, num_classes, epoch):
                     
                     classy_iou.append(mean_iou)
 
-                    df = df.append(pd.Series(classy_iou, index=df.columns), ignore_index=True)
+                    # df = df.append(pd.Series(classy_iou, index=df.columns), ignore_index=True)
+                    df = pd.concat([df, pd.DataFrame([classy_iou], columns=df.columns)], ignore_index=True)
 
             else:
                 break
