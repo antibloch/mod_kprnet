@@ -13,6 +13,7 @@ from model.model import UNet
 import pandas as pd
 import os
 import shutil
+import time
 
 parser = argparse.ArgumentParser("Train on semantic kitti")
 parser.add_argument("--semantic-kitti-dir", required=True, type=Path)
@@ -304,7 +305,7 @@ def train():
     # torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.enabled = True
     num_classes = 20
-
+    torch.random.manual_seed(int(time.time() * 1000) % 100000)
     model =  UNet(in_channels_coarse=1,in_channels_fine=1, out_channels=num_classes)
     torch.cuda.set_device(0)
     model.cuda()
