@@ -54,7 +54,7 @@ def spherical_projection(points,
     labels_ord = labels[order]
     indices_ord = orcale_indices[order]
     # 8) fill
-    depth_map[py_ord, px_ord] = depth_ord
+    depth_map[py_ord, px_ord] = 1.0/(depth_ord + 1e-6)
     refl_map [py_ord, px_ord] = refl_ord
     # indices of points to image indices
     points_2_image_indices = {}

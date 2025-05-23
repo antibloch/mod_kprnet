@@ -98,6 +98,7 @@ def custom_collate(batch):
         except:
             # If stacking fails (e.g., variable-length point clouds), keep as list
             collated[key] = items
+            
     return collated
 
 
@@ -174,11 +175,11 @@ def eval_val(model, val_loader, num_classes, epoch):
                         ref_colors = np.zeros((len(l3d), 3), dtype=np.float32)
 
 
-                        for label in range(num_classes+1):
+                        for label in range(num_classes):
                             pred_colors[p3d == label] = sup_colors[label]
 
 
-                        for label in range(num_classes+1):
+                        for label in range(num_classes):
                             ref_colors[l3d == label] = sup_colors[label]
 
 
