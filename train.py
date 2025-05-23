@@ -332,7 +332,7 @@ def train():
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(
-        model.parameters(), lr=0.00001, momentum=0.9, weight_decay=1e-4
+        model.parameters(), lr=5e-5, momentum=0.5, weight_decay=5e-4
     )
     warmup = 10
     epochs = 120
