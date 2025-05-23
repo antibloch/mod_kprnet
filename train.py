@@ -133,7 +133,7 @@ def loss_val(model, val_loader, loss_fn):
 
 
 
-def eval_val(model, val_loader, num_classes, epoch):
+def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val_l, lr_last):
 
     model.eval()
     with torch.no_grad():
@@ -289,15 +289,19 @@ def eval_val(model, val_loader, num_classes, epoch):
         per_classes_ious = np.array(per_classes_ious)
         dense_mean_iou = np.mean(dense_class_ious)
         sparse_mean_iou = np.mean(sparse_class_ious)
-        print("-------------------------------------------")
-        print("===========Mean Scores=====================")
-        for i in range(num_classes):
-            print(f"Class {class_names[i]}: {per_classes_ious[i]:.4f}" if str(per_classes_ious[i]) != 'nan' else f"Class {class_names[i]}: N/A")
-        print("-------------------------------------------")
-        print(f"Mean IoU over fully annotated: {dense_mean_iou:.4f}")
-        print(f"Mean IoU over partially annotated: {sparse_mean_iou:.4f}")
-        print("===========================================")
-        print("-------------------------------------------")
+        with open(f"results/vallog_epoch_{epoch}.txt", "w") as f:
+            f.wirte("-------------------------------------------")
+            f.write("===========Mean Scores=====================")
+            for i in range(num_classes):
+                f.write(f"Class {class_names[i]}: {per_classes_ious[i]:.4f}" if str(per_classes_ious[i]) != 'nan' else f"Class {class_names[i]}: N/A")
+            f.write("-------------------------------------------")
+            f.write(f"Mean IoU over fully annotated: {dense_mean_iou:.4f}")
+            f.write(f"Mean IoU over partially annotated: {sparse_mean_iou:.4f}")
+            f.write("===========================================")
+            f.write("-------------------------------------------")
+            f.write(
+                f"Epoch: {epoch}  Loss: {run_loss} | Grad Norm: {run_grad_norm} | Val Loss: {val_l} | lr: {lr_last}"
+            )
 
 
 
@@ -358,11 +362,6 @@ def train():
 
             predictions = model(depth_image, reflectivity_image)
 
-            # print(predictions.shape)
-            # print(labels_2d.shape)
-            # print(torch.min(labels_2d),torch.max(labels_2d))
-
-
             loss = loss_fn(predictions, labels_2d)
             optimizer.zero_grad()
             loss.backward()
@@ -380,11 +379,8 @@ def train():
         if epoch % 1 == 0:
             val_l = loss_val(model, val_loader, loss_fn)
 
-            print(
-                f"Epoch: {epoch}  Loss: {run_loss} | Grad Norm: {run_grad_norm} | Val Loss: {val_l} | lr: {scheduler.get_last_lr()}"
-            )
-
-            eval_val(model, val_loader, num_classes, epoch)
+            lr_last = scheduler.get_last_lr()
+            eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val_l, lr_last)
 
             torch.save(
                 model.state_dict(), f"checkpoints/epoch{epoch}.pth"
