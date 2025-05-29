@@ -14,6 +14,7 @@ import pandas as pd
 import os
 import shutil
 import time
+import math
 
 parser = argparse.ArgumentParser("Train on semantic kitti")
 parser.add_argument("--semantic-kitti-dir", required=True, type=Path)
@@ -293,7 +294,11 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
             f.wirte("-------------------------------------------")
             f.write("===========Mean Scores=====================")
             for i in range(num_classes):
-                f.write(f"Class {class_names[i]}: {per_classes_ious[i]:.4f}" if str(per_classes_ious[i]) != 'nan' else f"Class {class_names[i]}: N/A")
+                if not math.isnan(per_classes_ious[i]):
+                    f.write(f"Class {class_names[i]}: {per_classes_ious[i]:.4f}\n")
+                else:
+                    f.write(f"Class {class_names[i]}: N/A \n")
+
             f.write("-------------------------------------------")
             f.write(f"Mean IoU over fully annotated: {dense_mean_iou:.4f}")
             f.write(f"Mean IoU over partially annotated: {sparse_mean_iou:.4f}")
