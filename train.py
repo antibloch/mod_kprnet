@@ -291,7 +291,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
         dense_mean_iou = np.mean(dense_class_ious)
         sparse_mean_iou = np.mean(sparse_class_ious)
         with open(f"results/vallog_epoch_{epoch}.txt", "w") as f:
-            f.wirte("-------------------------------------------")
+            f.write("-------------------------------------------")
             f.write("===========Mean Scores=====================")
             for i in range(num_classes):
                 if not math.isnan(per_classes_ious[i]):
