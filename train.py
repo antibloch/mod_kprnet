@@ -33,29 +33,29 @@ if os.path.exists("results/img_res"):
     shutil.rmtree("results/img_res")
 os.makedirs("results/img_res")
 
-sup_colors = {
-0: [0, 0, 0],       # unlabeled - black
-1: [0, 0, 1],       # car - blue
-2: [1, 0, 0],       # bicycle - red
-3: [1, 0, 1],       # motorcycle - magenta
-4: [0, 1, 1],       # truck - cyan
-5: [0.5, 0.5, 0],   # other-vehicle - olive
-6: [1, 0.5, 0],     # person - orange
-7: [1, 1, 0],       # bicyclist - yellow
-8: [1, 0, 0.5],     # motorcyclist - pink
-9: [0.5, 0.5, 0.5], # road - gray
-10: [0.5, 0, 0],    # parking - dark red
-11: [0, 0.5, 0],    # sidewalk - dark green
-12: [0, 0, 0.5],    # other-ground - dark blue
-13: [0, 0.5, 0.5],  # building - teal
-14: [0.5, 0, 0.5],  # fence - purple
-15: [0, 1, 0],      # vegetation - green
-16: [0.7, 0.7, 0.7],# trunk - light gray
-17: [0.7, 0, 0.7],  # terrain - light purple
-18: [0, 0.7, 0.7],  # pole - light cyan
-19: [0.7, 0.7, 0]   # traffic-sign - light yellow
-}
 
+sup_colors = {
+    0: [0, 0, 0],       # car - blue
+    1: [0, 0, 1],       # bicycle - red
+    2: [1, 0, 0],       # motorcycle - magenta
+    3: [1, 0, 1],       # truck - cyan
+    4: [0, 1, 1],       # other-vehicle - olive
+    5: [0.5, 0.5, 0],   # person - orange
+    6: [1, 0.5, 0],     # bicyclist - yellow
+    7: [1, 1, 0],       # motorcyclist - pink
+    8: [1, 0, 0.5],     # road - gray
+    9: [0.5, 0.5, 0.5], # parking - dark red
+    10: [0.5, 0, 0],    # sidewalk - dark green
+    11: [0, 0.5, 0],    # other-ground - dark blue
+    12: [0, 0, 0.5],    # building - teal
+    13: [0, 0.5, 0.5],  # fence - purple
+    14: [0.5, 0, 0.5],  # vegetation - green
+    15: [0, 1, 0],      # trunk - light gray
+    16: [0.7, 0.7, 0.7], # terrain - light purple
+    17: [0.7, 0, 0.7],  # pole - light cyan
+    18: [0, 0.7, 0.7],  # traffic-sign - light yellow
+    19: [0.7, 0.7, 0]   # unlabeled - black
+}
 
 class_names = [
 "car",
@@ -291,21 +291,21 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
         dense_mean_iou = np.mean(dense_class_ious)
         sparse_mean_iou = np.mean(sparse_class_ious)
         with open(f"results/vallog_epoch_{epoch}.txt", "w") as f:
-            f.write("-------------------------------------------")
-            f.write("===========Mean Scores=====================")
+            f.write("-------------------------------------------\n")
+            f.write("===========Mean Scores=====================\n")
             for i in range(num_classes):
                 if not math.isnan(per_classes_ious[i]):
                     f.write(f"Class {class_names[i]}: {per_classes_ious[i]:.4f}\n")
                 else:
                     f.write(f"Class {class_names[i]}: N/A \n")
 
-            f.write("-------------------------------------------")
-            f.write(f"Mean IoU over fully annotated: {dense_mean_iou:.4f}")
-            f.write(f"Mean IoU over partially annotated: {sparse_mean_iou:.4f}")
-            f.write("===========================================")
-            f.write("-------------------------------------------")
+            f.write("-------------------------------------------\n")
+            f.write(f"Mean IoU over fully annotated: {dense_mean_iou:.4f}\n")
+            f.write(f"Mean IoU over partially annotated: {sparse_mean_iou:.4f}\n")
+            f.write("===========================================\n")
+            f.write("-------------------------------------------\n")
             f.write(
-                f"Epoch: {epoch}  Loss: {run_loss} | Grad Norm: {run_grad_norm} | Val Loss: {val_l} | lr: {lr_last}"
+                f"Epoch: {epoch}  Loss: {run_loss} | Grad Norm: {run_grad_norm} | Val Loss: {val_l} | lr: {lr_last}\n"
             )
 
 
