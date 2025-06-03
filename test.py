@@ -237,8 +237,8 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
                         normal_classy_iou[i] = 0.0
                     else:
                         iou = TP / denom
-                        classy_iou[i] = iou
-                        normal_classy_iou[i] = iou * weights[i]
+                        classy_iou[i] = iou * weights[i]
+                        normal_classy_iou[i] = iou
 
 
                 # for i in range(len(classy_iou)):
