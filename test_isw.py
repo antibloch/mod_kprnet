@@ -22,18 +22,18 @@ parser.add_argument("--semantic-kitti-dir", required=True, type=Path)
 parser.add_argument("--epoch", required=True, type=int)
 args = parser.parse_args()
 
-if os.path.exists("val_results"):
-    shutil.rmtree("val_results")
-os.makedirs("val_results")
+if os.path.exists("val_results_isw"):
+    shutil.rmtree("val_results_isw")
+os.makedirs("val_results_isw")
 
 
-if os.path.exists("val_results/img_res"):
-    shutil.rmtree("val_results/img_res")
+if os.path.exists("val_results_isw/img_res"):
+    shutil.rmtree("val_results_isw/img_res")
 os.makedirs("val_results/img_res")
 
 
-if os.path.exists("val_results/pcd"):
-    shutil.rmtree("val_results/pcd")
+if os.path.exists("val_results_isw/pcd"):
+    shutil.rmtree("val_results_isw/pcd")
 os.makedirs("val_results/pcd")
 
 sup_colors = {
@@ -171,13 +171,13 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
                             (np.max(r_2d_img) - np.min(r_2d_img) + 1e-6)
 
                         plt.imsave(
-                            f"val_results/img_res/Sample_{save_count}_pred.png", p_2d_img, cmap='gray')
+                            f"val_results_isw/img_res/Sample_{save_count}_pred.png", p_2d_img, cmap='gray')
                         plt.imsave(
-                            f"val_results/img_res/Sample_{save_count}_gt.png", l_2d_img, cmap='gray')
+                            f"val_results_isw/img_res/Sample_{save_count}_gt.png", l_2d_img, cmap='gray')
                         plt.imsave(
-                            f"val_results/img_res/Sample_{save_count}_depth.png", depth_2d_img, cmap='gray')
+                            f"val_results_isw/img_res/Sample_{save_count}_depth.png", depth_2d_img, cmap='gray')
                         plt.imsave(
-                            f"val_results/img_res/Sample_{save_count}_reflectivity.png", r_2d_img, cmap='gray')
+                            f"val_results_isw/img_res/Sample_{save_count}_reflectivity.png", r_2d_img, cmap='gray')
 
                         pred_colors = np.zeros((len(p3d), 3), dtype=np.float32)
                         ref_colors  = np.zeros((len(l3d), 3), dtype=np.float32)
@@ -198,9 +198,9 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
                         pcd_pred.colors = o3d.utility.Vector3dVector(pred_colors)
 
                         o3d.io.write_point_cloud(
-                            f"val_results/pcd/Sample_{save_count}_pred.pcd", pcd_pred)
+                            f"val_results_isw/pcd/Sample_{save_count}_pred.pcd", pcd_pred)
                         o3d.io.write_point_cloud(
-                            f"val_results/pcd/Sample_{save_count}_gt.pcd", pcd_gt)
+                            f"val_results_isw/pcd/Sample_{save_count}_gt.pcd", pcd_gt)
                         
 
                 conf_matrix = np.zeros(
@@ -253,7 +253,7 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
     class_counts = np.array(all_class_nums)  # N x num_classes  
 
     total_num_points = np.sum(class_counts)
-    with open(f"val_results/vallog_epoch_{epoch}.txt", "w") as f:
+    with open(f"val_results_isw/vallog_epoch_{epoch}.txt", "w") as f:
         f.write("---------------------------------------------------------\n")
         f.write("Class Scores: \n")
         for i in range(num_classes):
@@ -277,7 +277,7 @@ def train():
     num_classes = 20
     model = UNet(in_channels_coarse=1, in_channels_fine=1,
                  out_channels=num_classes)
-    model.load_state_dict(torch.load(f"checkpoints/epoch{args.epoch}.pth"))
+    model.load_state_dict(torch.load(f"isw_checkpoints/isw_epoch{args.epoch}.pth"))
     torch.cuda.set_device(0)
     model.cuda()
 

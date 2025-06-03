@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from dataset.dataset import SemanticKitti
 from utils.utils import *
-from model.model import UNet
+from model.model_isw import UNet, ISW_Loss
 import pandas as pd
 import os
 import shutil
@@ -22,21 +22,21 @@ parser.add_argument("--semantic-kitti-dir", required=True, type=Path)
 
 args = parser.parse_args()
 
-if os.path.exists("checkpoints"):
-    shutil.rmtree("checkpoints")
-os.makedirs("checkpoints")
+if os.path.exists("isw_checkpoints"):
+    shutil.rmtree("isw_checkpoints")
+os.makedirs("isw_checkpoints")
 
-if os.path.exists("results"):
-    shutil.rmtree("results")
-os.makedirs("results")
+if os.path.exists("isw_results"):
+    shutil.rmtree("isw_results")
+os.makedirs("isw_results")
 
-if os.path.exists("results/img_res"):
-    shutil.rmtree("results/img_res")
-os.makedirs("results/img_res")
+if os.path.exists("isw_results/img_res"):
+    shutil.rmtree("isw_results/img_res")
+os.makedirs("isw_results/img_res")
 
-if os.path.exists("results/pcd"):
-    shutil.rmtree("results/pcd")
-os.makedirs("results/pcd")
+if os.path.exists("isw_results/pcd"):
+    shutil.rmtree("isw_results/pcd")
+os.makedirs("isw_results/pcd")
 
 # lab => lab -1
 sup_colors = {
@@ -139,7 +139,6 @@ def loss_val(model, val_loader, loss_fn):
 
 
 
-
 def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val_l, lr_last, save_vis= False):
 
     model.eval()
@@ -204,13 +203,13 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
                                 (np.max(r_2d_img) - np.min(r_2d_img) + 1e-6)
 
                             plt.imsave(
-                                f"results/img_res/Sample_{save_count}_pred.png", p_2d_img, cmap='gray')
+                                f"isw_results/img_res/Sample_{save_count}_pred.png", p_2d_img, cmap='gray')
                             plt.imsave(
-                                f"results/img_res/Sample_{save_count}_gt.png", l_2d_img, cmap='gray')
+                                f"isw_results/img_res/Sample_{save_count}_gt.png", l_2d_img, cmap='gray')
                             plt.imsave(
-                                f"results/img_res/Sample_{save_count}_depth.png", depth_2d_img, cmap='gray')
+                                f"isw_results/img_res/Sample_{save_count}_depth.png", depth_2d_img, cmap='gray')
                             plt.imsave(
-                                f"results/img_res/Sample_{save_count}_reflectivity.png", r_2d_img, cmap='gray')
+                                f"isw_results/img_res/Sample_{save_count}_reflectivity.png", r_2d_img, cmap='gray')
 
                             pred_colors = np.zeros((len(p3d), 3), dtype=np.float32)
                             ref_colors  = np.zeros((len(l3d), 3), dtype=np.float32)
@@ -231,9 +230,9 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
                             pcd_pred.colors = o3d.utility.Vector3dVector(pred_colors)
 
                             o3d.io.write_point_cloud(
-                                f"results/pcd/Sample_{save_count}_pred.pcd", pcd_pred)
+                                f"isw_results/pcd/Sample_{save_count}_pred.pcd", pcd_pred)
                             o3d.io.write_point_cloud(
-                                f"results/pcd/Sample_{save_count}_gt.pcd", pcd_gt)
+                                f"isw_results/pcd/Sample_{save_count}_gt.pcd", pcd_gt)
                             
 
                     conf_matrix = np.zeros(
@@ -308,6 +307,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
 
 
 
+
 def train():
     # torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.enabled = True
@@ -338,6 +338,7 @@ def train():
     )
 
     loss_fn = nn.CrossEntropyLoss()
+    isw_loss_fn = ISW_Loss()
     optimizer = torch.optim.SGD(
         model.parameters(), lr=5e-5, momentum=0.5, weight_decay=5e-4
     )
@@ -362,11 +363,18 @@ def train():
             reflectivity_image = reflectivity_image
             labels_2d = items["label_image"].cuda(non_blocking=True)
 
-            predictions = model(depth_image, reflectivity_image)
+            predictions, coarse_feats, fine_feats = model(depth_image, reflectivity_image)
 
             loss = loss_fn(predictions, labels_2d)
+
+            coarse_isw_loss = torch.mean([isw_loss_fn(feat) for feat in coarse_feats])
+            fine_isw_loss = torch.mean([isw_loss_fn(feat) for feat in fine_feats])
+            isw_loss = 0.5 *coarse_isw_loss + 0.5 *fine_isw_loss
+
+            net_loss = loss + 0.6 *isw_loss
+            
             optimizer.zero_grad()
-            loss.backward()
+            net_loss.backward()
             grad_norm =torch.sum(torch.tensor([torch.norm(p.grad) for p in model.parameters() if p.grad is not None])).item()
             run_grad_norm += grad_norm
             nn.utils.clip_grad_norm_(model.parameters(), 3.0)
@@ -385,7 +393,7 @@ def train():
             eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val_l, lr_last)
 
             torch.save(
-                model.state_dict(), f"checkpoints/epoch{epoch}.pth"
+                model.state_dict(), f"isw_checkpoints/isw_epoch{epoch}.pth"
             )
             
 
