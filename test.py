@@ -265,7 +265,7 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
             f.write(f".... Class {class_names[i]} | with mIoU: {expected_score_class_i:.4f}\n | Naturally Occurs with Probability : {prob_class_i:.4f}\n")
 
         mwiou = np.mean(np.sum(weighted_class_scores, axis=1))  
-        print(f"Weighted mIOU overall: {mwiou:.4f}")
+        f.write(f"Weighted mIOU overall: {mwiou:.4f}")
         f.write("---------------------------------------------------------\n")  
 
 
