@@ -79,7 +79,8 @@ class UNet(nn.Module):
             nn.InstanceNorm2d(128, affine=False),
             DownConv(128, 256), 
             nn.InstanceNorm2d(256, affine=False),
-            DownConv(256, 512) 
+            DownConv(256, 512),
+            nn.InstanceNorm2d(512, affine=False)
         ])
         self.encoder_fine = nn.ModuleList([
             DownConv(in_channels_fine, 64), 
@@ -88,7 +89,8 @@ class UNet(nn.Module):
             nn.InstanceNorm2d(128, affine=False),
             DownConv(128, 256), 
             nn.InstanceNorm2d(256, affine=False),
-            DownConv(256, 512) 
+            DownConv(256, 512) ,
+            nn.InstanceNorm2d(512, affine=False)
         ])
         self.bottleneck = ConvBlock(512+512, 1024)
         #extra channels allow for concatenation of skip connections in upsampling block
@@ -115,8 +117,8 @@ class UNet(nn.Module):
             o2 = layer(o2)
             if isinstance(layer, nn.InstanceNorm2d):
                 fine_feature_maps.append(o2)
-            else:
                 skips.append(o2)
+                
         o = torch.cat((o1,o2), dim=1)
         o = self.bottleneck(o)
         for i, layer in enumerate(self.decoder):

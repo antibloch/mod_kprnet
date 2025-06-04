@@ -371,7 +371,7 @@ def train():
             fine_isw_loss = torch.mean(torch.stack([isw_loss_fn(feat) for feat in fine_feats]))
             isw_loss = 0.5 *coarse_isw_loss + 0.5 *fine_isw_loss
 
-            net_loss = loss + 0.6 *isw_loss
+            net_loss = loss + 1e-3 * isw_loss
             
             optimizer.zero_grad()
             net_loss.backward()
