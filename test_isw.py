@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from dataset.dataset import SemanticKitti
 from utils.utils import *
-from model.model import UNet
+from model.model_isw import UNet, ISW_Loss
 import pandas as pd
 import os
 import shutil

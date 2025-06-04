@@ -60,7 +60,6 @@ class ISW_Loss(nn.Module):
 
         X_s = Xp * std.unsqueeze(2)
         covariance_s = torch.bmm(X_s, X_s.transpose(1, 2))/(H*W)
-        print(covariance_s.shape)
         M = get_mask(X.shape[0], X.shape[1]).to(x.device)
         masked_covariance_s = covariance_s * M
         l1_normed_masked_covariance_s = torch.mean(torch.norm(masked_covariance_s, p=1, dim=(1, 2)))
