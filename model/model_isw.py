@@ -116,7 +116,8 @@ class UNet(nn.Module):
             o2 = layer(o2)
             if isinstance(layer, nn.InstanceNorm2d):
                 fine_feature_maps.append(o2)
-            skips.append(o2)
+            else:
+                skips.append(o2)
         o = torch.cat((o1,o2), dim=1)
         o = self.bottleneck(o)
         for i, layer in enumerate(self.decoder):
@@ -180,18 +181,3 @@ def fine_filter_image(image):
 
 
 
-
-# if __name__ == "__main__":
-    # input_1 = torch.randn(1,10,1024,256)
-    # input_2 = torch.randn(1,10,1024,256)
-    # device = torch.device('cuda')
-    # model = IS_Loss().to(device)
-    # input_1 = input_1.to(device)
-    # output, _ , _ = model(input_1)
-
-    # model = UNet(out_channels=10).to(device)
-    # input_1 = input_1.to(device)
-    # input_2 = input_2.to(device)
-    # print(f"Input 1 shape: {input_1.shape}")
-    # print(f"Input 2 shape: {input_2.shape}")
-    # print(f"Output shape: {model(input_1, input_2).shape}")
