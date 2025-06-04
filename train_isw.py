@@ -291,7 +291,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
     class_counts = np.array(all_class_nums)  # N x num_classes  
 
     total_num_points = np.sum(class_counts)
-    with open(f"val_results/vallog_epoch_{epoch}.txt", "w") as f:
+    with open(f"isw_results/vallog_epoch_{epoch}.txt", "w") as f:
         f.write("---------------------------------------------------------\n")
         f.write("Class Scores: \n")
         for i in range(num_classes):
@@ -300,7 +300,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
 
             expected_score_class_i = np.sum(weights_class_i * scores_class_i)
             prob_class_i = np.sum(class_counts[:,i])/total_num_points  
-            f.write(f".... Class {class_names[i]} | with mIoU: {expected_score_class_i:.4f}\n | Naturally Occurs with Probability : {prob_class_i:.4f}\n")
+            f.write(f".... Class {class_names[i]} | with mIoU: {expected_score_class_i:.4f} | Naturally Occurs with Probability : {prob_class_i:.4f}\n")
 
         mwiou = np.mean(np.sum(weighted_class_scores, axis=1))  
         f.write(f"Weighted mIOU overall: {mwiou:.4f}")
