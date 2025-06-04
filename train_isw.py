@@ -114,7 +114,7 @@ def custom_collate(batch):
     return collated
 
 
-def loss_val(model, val_loader, loss_fn):
+def loss_val(model, val_loader, loss_fn, isw_loss_fn):
     model.eval()
     with torch.no_grad():
         average_loss = 0
@@ -125,10 +125,16 @@ def loss_val(model, val_loader, loss_fn):
                 depth_image = depth_image
                 reflectivity_image = reflectivity_image
                 labels_2d = items["label_image"].cuda(non_blocking=True)
-                predictions = model(depth_image, reflectivity_image)
+                predictions,  coarse_feats, fine_feats = model(depth_image, reflectivity_image)
 
                 loss = loss_fn(predictions, labels_2d)
-                average_loss += loss.item()
+
+                coarse_isw_loss = torch.mean(torch.stack([isw_loss_fn(feat) for feat in coarse_feats]))
+                fine_isw_loss = torch.mean(torch.stack([isw_loss_fn(feat) for feat in fine_feats]))
+                isw_loss = 0.5 * coarse_isw_loss + 0.5 * fine_isw_loss
+
+                net_loss = loss + 1e-3 * isw_loss
+                average_loss += net_loss.item()
 
             else:
                 break
@@ -164,7 +170,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
                 points_xyz = items["points_xyz"]
                 l_3d = batch_back_project(labels_2d, px, py)
 
-                predictions = model(depth_image, reflectivity_image)
+                predictions, _, _ = model(depth_image, reflectivity_image)
 
                 prediction_2d = predictions.argmax(1)
 
@@ -369,7 +375,7 @@ def train():
 
             coarse_isw_loss = torch.mean(torch.stack([isw_loss_fn(feat) for feat in coarse_feats]))
             fine_isw_loss = torch.mean(torch.stack([isw_loss_fn(feat) for feat in fine_feats]))
-            isw_loss = 0.5 *coarse_isw_loss + 0.5 *fine_isw_loss
+            isw_loss = 0.5 * coarse_isw_loss + 0.5 * fine_isw_loss
 
             net_loss = loss + 1e-3 * isw_loss
             
@@ -387,9 +393,10 @@ def train():
         run_loss /= step
         run_grad_norm /= step
         if epoch % 1 == 0:
-            val_l = loss_val(model, val_loader, loss_fn)
+            val_l = loss_val(model, val_loader, loss_fn, isw_loss_fn)
 
             lr_last = scheduler.get_last_lr()
+            
             eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val_l, lr_last)
 
             torch.save(

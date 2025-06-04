@@ -132,7 +132,7 @@ def eval_val(model, val_loader, num_classes, epoch, save_vis=False):
             points_xyz = items["points_xyz"]
             l_3d = batch_back_project(labels_2d, px, py)
 
-            predictions = model(depth_image, reflectivity_image)
+            predictions, _, _ = model(depth_image, reflectivity_image)
 
             prediction_2d = predictions.argmax(1)
 
