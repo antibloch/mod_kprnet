@@ -29,12 +29,12 @@ os.makedirs("val_results_isw")
 
 if os.path.exists("val_results_isw/img_res"):
     shutil.rmtree("val_results_isw/img_res")
-os.makedirs("val_results/img_res")
+os.makedirs("val_results_isw/img_res")
 
 
 if os.path.exists("val_results_isw/pcd"):
     shutil.rmtree("val_results_isw/pcd")
-os.makedirs("val_results/pcd")
+os.makedirs("val_results_isw/pcd")
 
 sup_colors = {
     0: [0, 0, 0],       # car - black
