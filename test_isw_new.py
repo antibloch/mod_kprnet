@@ -18,7 +18,6 @@ import math
 import random
 
 parser = argparse.ArgumentParser("Train on semantic kitti")
-parser.add_argument("--semantic-kitti-dir", required=True, type=Path)
 parser.add_argument("--epoch", required=True, type=int)
 parser.add_argument("--pts_path", type=Path)
 parser.add_argument("--labs_path", type=Path)
