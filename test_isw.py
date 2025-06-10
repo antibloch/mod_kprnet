@@ -290,7 +290,7 @@ def train():
         collate_fn=custom_collate
     )
 
-    eval_val(model, val_loader, num_classes, args.epoch)
+    eval_val(model, val_loader, num_classes, args.epoch, save_vis=True)
 
 
 def main() -> None:
