@@ -205,14 +205,14 @@ def eval_val(model, pts_pth, lab_pth, num_classes, epoch, fov_up_deg, fov_down_d
                         depth_2d_img = depth_image[ab, 0, :, :].cpu().numpy()
                         r_2d_img = reflectivity_image[ab, 0, :, :].cpu().numpy()
 
-                        p_2d_img = (p_2d_img - np.min(p_2d_img)) / \
-                            (np.max(p_2d_img) - np.min(p_2d_img) + 1e-6)
-                        l_2d_img = (l_2d_img - np.min(l_2d_img)) / \
-                            (np.max(l_2d_img) - np.min(l_2d_img) + 1e-6)
-                        depth_2d_img = (depth_2d_img - np.min(depth_2d_img)) / \
-                            (np.max(depth_2d_img) - np.min(depth_2d_img) + 1e-6)
-                        r_2d_img = (r_2d_img - np.min(r_2d_img)) / \
-                            (np.max(r_2d_img) - np.min(r_2d_img) + 1e-6)
+                        p_2d_img = (p_2d_img - np.percentile(p_2d_img,2)) / \
+                            (np.percentile(p_2d_img,100-2) - np.percentile(p_2d_img,2) + 1e-6)
+                        l_2d_img = (l_2d_img - np.percentile(l_2d_img,2)) / \
+                            (np.percentile(l_2d_img,100-2) - np.percentile(l_2d_img,2))
+                        depth_2d_img = (depth_2d_img - np.percentile(depth_2d_img,2)) / \
+                            (np.percentile(depth_2d_img,100-2) - np.percentile(depth_2d_img,2))
+                        r_2d_img = (r_2d_img - np.percentile(r_2d_img,2)) / \
+                            (np.percentile(r_2d_img,100-2) - np.percentile(r_2d_img,2))
 
                         plt.imsave(
                             f"val_results_isw_test/img_res/Sample_{save_count}_pred.png", p_2d_img, cmap='gray')
