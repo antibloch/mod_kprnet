@@ -16,7 +16,7 @@ import shutil
 import time
 import math
 import random
-
+import torch.nn.functional as F
 parser = argparse.ArgumentParser("Train on semantic kitti")
 parser.add_argument("--epoch", required=True, type=int)
 parser.add_argument("--pts_path", type=Path)
@@ -110,7 +110,7 @@ def custom_collate(batch):
     return collated
 
 
-def eval_val(model, pts_pth, lab_pth, num_classes, epoch, save_vis=False):
+def eval_val(model, pts_pth, lab_pth, num_classes, epoch, fov_up_deg, fov_down_deg, H, W, save_vis=False):
     pts_files = os.listdir(pts_pth)
     labs_files = os.listdir(lab_pth)
 
@@ -127,27 +127,30 @@ def eval_val(model, pts_pth, lab_pth, num_classes, epoch, save_vis=False):
         for step, (pt_file, lab_file) in enumerate(zip(pts_files, labs_files)):
             points = np.load(os.path.join(pts_pth, pt_file))
             labs = np.load(os.path.join(lab_pth, lab_file))
+
+
             points_xyz = points[:, :3]
             points_refl = points[:, 3]
+            labs = labs.squeeze(-1)
 
             (depth_image, refl_image, label_image, px, py , points_xyz, points_refl, labels) = spherical_projection(points_xyz,
                                                             points_refl,
                                                             labs,
-                                                            fov_up_deg=2.0 ,
-                                                            fov_down_deg=-24.9,
-                                                            H= 64 ,
-                                                            W= 2048
+                                                            fov_up_deg=fov_up_deg ,
+                                                            fov_down_deg=fov_down_deg,
+                                                            H= H ,
+                                                            W= W
                                                             )
             
             items = {
-                "depth_image": torch.from_numpy(depth_image).float().unsqueeze(0),
-                "reflectivity_image": torch.from_numpy(refl_image).float().unsqueeze(0),
-                "label_image": torch.from_numpy(label_image).long(),
-                "px": torch.from_numpy(px).long(),
-                "py": torch.from_numpy(py).long(),
-                "points_xyz": torch.from_numpy(points_xyz).float(),
-                "points_refl": torch.from_numpy(points_refl).float(),
-                "labels": torch.from_numpy(labels).long(),
+                "depth_image": torch.from_numpy(depth_image).float().unsqueeze(0).unsqueeze(0),
+                "reflectivity_image": torch.from_numpy(refl_image).float().unsqueeze(0).unsqueeze(0),
+                "label_image": torch.from_numpy(label_image).long().unsqueeze(0),
+                "px": [torch.from_numpy(px).long()],
+                "py": [torch.from_numpy(py).long()],
+                "points_xyz": torch.from_numpy(points_xyz).float().unsqueeze(0),
+                "points_refl": torch.from_numpy(points_refl).float().unsqueeze(0),
+                "labels": torch.from_numpy(labels).long().unsqueeze(0),
                 }
 
 
@@ -160,9 +163,20 @@ def eval_val(model, pts_pth, lab_pth, num_classes, epoch, save_vis=False):
             py = items["py"]
             px = items["px"]
             points_xyz = items["points_xyz"]
+
+            H_new =64
+            W_new = 2048
+
+            H_old = H
+            W_old = W
+
+            resized_depth_image = F.interpolate(depth_image, size =(H_new, W_new), mode = 'bicubic',align_corners=True)
+            resized_reflectivity_image = F.interpolate(reflectivity_image, size =(H_new, W_new), mode = 'bicubic',align_corners=True)
+            
             l_3d = batch_back_project(labels_2d, px, py)
 
-            predictions = model(depth_image, reflectivity_image)
+            pre_predictions = model(resized_depth_image, resized_reflectivity_image)
+            predictions = F.interpolate(pre_predictions, size =(H_old, W_old), mode = 'bicubic',align_corners=True)
 
             prediction_2d = predictions.argmax(1)
 
@@ -306,7 +320,7 @@ def train():
     # torch.backends.cudnn.enabled = True
 
     pts_path = args.pts_path
-    labs_path = args.lab_path
+    labs_path = args.labs_path
     num_classes = 20
     model = UNet(in_channels_coarse=1, in_channels_fine=1,
                  out_channels=num_classes)
@@ -315,7 +329,13 @@ def train():
     model.cuda()
 
 
-    eval_val(model, pts_path, labs_path, num_classes, args.epoch)
+    eval_val(model, pts_path, labs_path, num_classes, args.epoch,
+            fov_up_deg=44.07,
+            fov_down_deg=-45.73,
+            H= 64 ,
+            W= 1024,
+            save_vis=True  
+             )
 
 
 def main() -> None:
