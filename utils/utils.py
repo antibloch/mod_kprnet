@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 import open3d as o3d
+import cv2
 def back_project(cl_map_2d, rows, cols):
     return cl_map_2d[rows, cols]
 def spherical_projection(points,
@@ -73,5 +74,8 @@ def spherical_projection(points,
     cl_map_2d = np.zeros((H, W), dtype=np.int32) + 18
     cl_map_2d[ rows, cols ] = labels_flat
     labels_ord = np.expand_dims(back_project(cl_map_2d, rows, cols), axis = -1)
+
+    depth_map = cv2.bilateralFilter(depth_map, 5, 1, 1)
+    refl_map = cv2.bilateralFilter(refl_map, 5, 1, 1)
 
     return depth_map, refl_map, cl_map_2d, rows, cols, points_ord, refl_ord, labels_ord
