@@ -56,6 +56,16 @@ class SemanticKitti(torch.utils.data.Dataset):
         # min-max normalization
         depth_image = (depth_image - np.min(depth_image))/(np.max(depth_image) - np.min(depth_image) + 1e-6)
         refl_image = (refl_image - np.min(refl_image))/(np.max(refl_image) - np.min(refl_image) + 1e-6)
+
+        # dist normalization
+        d_mean = np.load('depth_mean.npy')
+        d_std = np.load('depth_std.npy')
+
+        r_mean = np.load('reflectivity_mean.npy')
+        r_std = np.load('reflectivity_std.npy')
+
+        depth_image = (depth_image - d_mean) /(d_std + 1e-6)
+        refl_image = (refl_image - r_mean) / (r_std + 1e-6)
         
         # print(depth_image.shape, refl_image.shape, label_image.shape, px.shape, py.shape, points_xyz.shape, points_refl.shape, labels.shape)
         res = {
