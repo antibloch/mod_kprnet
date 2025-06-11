@@ -50,8 +50,8 @@ class SemanticKitti(torch.utils.data.Dataset):
                                                                     W= 2048
                                                                     )
         # percentile clipping
-        depth_image = np.clip(depth_image, np.percentile(depth_image, 2), np.percentile(depth_image, 98-2))
-        refl_image = np.clip(refl_image, np.percentile(refl_image, 2), np.percentile(refl_image, 2))
+        depth_image = np.clip(depth_image, np.percentile(depth_image, 1), np.percentile(depth_image, 99))
+        refl_image = np.clip(refl_image, np.percentile(refl_image, 1), np.percentile(refl_image, 99))
 
         # min-max normalization
         depth_image = (depth_image - np.min(depth_image))/(np.max(depth_image) - np.min(depth_image) + 1e-6)
