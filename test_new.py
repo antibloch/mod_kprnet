@@ -142,6 +142,8 @@ def eval_val(model, pts_pth, lab_pth, num_classes, epoch, fov_up_deg, fov_down_d
                                                             W= W
                                                             )
             
+            
+            
             items = {
                 "depth_image": torch.from_numpy(depth_image).float().unsqueeze(0).unsqueeze(0),
                 "reflectivity_image": torch.from_numpy(refl_image).float().unsqueeze(0).unsqueeze(0),

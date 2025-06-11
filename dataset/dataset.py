@@ -49,6 +49,14 @@ class SemanticKitti(torch.utils.data.Dataset):
                                                                     H= 64 ,
                                                                     W= 2048
                                                                     )
+        # percentile clipping
+        depth_image = np.clip(depth_image, np.percentile(depth_image, 2), np.percentile(depth_image, 98-2))
+        refl_image = np.clip(refl_image, np.percentile(refl_image, 2), np.percentile(refl_image, 2))
+
+        # min-max normalization
+        depth_image = (depth_image - np.min(depth_image))/(np.max(depth_image) - np.min(depth_image) + 1e-6)
+        refl_image = (refl_image - np.min(refl_image))/(np.max(refl_image) - np.min(refl_image) + 1e-6)
+        
         # print(depth_image.shape, refl_image.shape, label_image.shape, px.shape, py.shape, points_xyz.shape, points_refl.shape, labels.shape)
         res = {
             "depth_image": torch.from_numpy(depth_image).float().unsqueeze(0),
