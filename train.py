@@ -285,7 +285,7 @@ def eval_val(model, val_loader, num_classes, epoch, run_loss, run_grad_norm, val
     class_counts = np.array(all_class_nums)  # N x num_classes  
 
     total_num_points = np.sum(class_counts)
-    with open(f"val_results/vallog_epoch_{epoch}.txt", "w") as f:
+    with open(f"results/vallog_epoch_{epoch}.txt", "w") as f:
         f.write("---------------------------------------------------------\n")
         f.write("Class Scores: \n")
         for i in range(num_classes):
