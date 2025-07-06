@@ -16,3 +16,13 @@
 
 ![Epoch_90_gt](https://github.com/user-attachments/assets/a2f7bef7-a13c-43b0-8414-8748dab1a822)
 
+## 3D Projected Segmentation Map (Output)
+
+![image](https://github.com/user-attachments/assets/d1d02286-5ed9-4a88-9bcf-fd1fb82dc5f2)
+
+
+## 3D Projected Segmentation Ground Truth
+
+![image](https://github.com/user-attachments/assets/42a0f845-7395-4ea1-9c75-1d8cc264b167)
+
+
